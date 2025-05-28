@@ -15,7 +15,7 @@ The app uses the browser's Speech Synthesis API to generate speech when a symbol
 
 ## How does it work?
 
-This video shows Srna. She is one of the children who have received the Cboard Communicator thanks to UNICEF’s ["For every child, a voice"](https://www.unicef.org/innovation/stories/giving-every-child-voice-aac-technology) project.
+This video shows Srna. She is one of the children who have received the Cboard Communicator thanks to UNICEF's ["For every child, a voice"](https://www.unicef.org/innovation/stories/giving-every-child-voice-aac-technology) project.
 
 <a href="https://youtu.be/wqLauXnyLhY"><img src="https://img.youtube.com/vi/wqLauXnyLhY/0.jpg" alt="Real Look Autism Episode 8" width="480" height="360"></a>
 
@@ -78,6 +78,157 @@ Creates a Docker image with cboard built for production. The image is tagged as 
 ### `make run`
 
 Runs the cboard:latest Docker image on port 5000.
+
+## Cordova Setup
+
+Cboard can be packaged as a native mobile application using Apache Cordova. This allows you to build and deploy Cboard to Android, iOS, and Electron (Windows) platforms.
+
+### Prerequisites
+
+Before setting up Cordova, ensure you have:
+- Node.js and npm installed
+- Cordova CLI: `npm install -g cordova`
+- Platform-specific requirements:
+  - **Android**: Android Studio, Java JDK 8+
+  - **iOS**: macOS with Xcode
+  - **Electron**: No additional requirements
+
+### Option 1: Using the Separate Cordova Repository (Recommended)
+
+The easiest way to build Cboard with Cordova is to use the dedicated [ccboard repository](https://github.com/cboard-org/ccboard):
+
+1. Clone the ccboard repository:
+   ```bash
+   git clone https://github.com/cboard-org/ccboard.git
+   cd ccboard
+   ```
+
+2. Follow the setup instructions in the ccboard README for your target platform.
+
+### Option 2: Setting up Cordova in this Repository
+
+If you want to set up Cordova directly in this repository:
+
+#### 1. Prepare the Cboard React App
+
+Before building with Cordova, you need to modify some files:
+
+1. In `package.json`, change the homepage:
+   ```json
+   "homepage": "."
+   ```
+
+2. In `public/index.html`, add the Cordova script tag inside the `<head>` section:
+   ```html
+   <script src="cordova.js"></script>
+   ```
+
+#### 2. Build for Cordova
+
+Use the special Cordova build command that produces a non-minified build suitable for debugging:
+
+```bash
+yarn build-cordova-debug
+```
+
+For production builds:
+```bash
+yarn build
+```
+
+#### 3. Create Cordova Project Structure
+
+```bash
+# Create www directory for Cordova
+mkdir -p www
+
+# Copy the build output to www
+cp -r build/* www/
+
+# Initialize Cordova project
+cordova create cboard-cordova com.cboard.app Cboard
+cd cboard-cordova
+
+# Copy the www folder
+cp -r ../www/* www/
+```
+
+#### 4. Add Platforms
+
+```bash
+# For Android
+cordova platform add android
+
+# For iOS
+cordova platform add ios
+
+# For Electron (Windows)
+cordova platform add electron@2.0.0
+```
+
+#### 5. Add Required Plugins
+
+```bash
+# Speech synthesis plugin for text-to-speech
+cordova plugin add phonegap-plugin-speech-synthesis
+
+# Other plugins as needed
+cordova plugin add cordova-plugin-file
+cordova plugin add cordova-plugin-device
+```
+
+#### 6. Build and Run
+
+**Android:**
+```bash
+# Run on emulator
+cordova run android --emulator
+
+# Build for release
+cordova build android --release
+```
+
+**iOS:**
+```bash
+# Open in Xcode
+cordova prepare ios
+# Then open platforms/ios/*.xcworkspace in Xcode
+
+# Or build directly
+cordova build ios
+```
+
+**Electron:**
+```bash
+# Build for release
+cordova build electron --release
+
+# Build with dev tools
+cordova build electron --debug
+```
+
+### Platform-Specific Notes
+
+#### Android
+- For release builds, you'll need to sign the APK. See the [Android documentation](https://developer.android.com/studio/publish/app-signing) for details.
+- Debug output can be viewed in Chrome DevTools at `chrome://inspect`
+
+#### iOS
+- Requires macOS with Xcode installed
+- You'll need an Apple Developer account for device testing and distribution
+- Configure signing certificates in Xcode
+
+#### Electron
+- The `settings.json` file in the root contains BrowserWindow configurations
+- Suitable for Windows desktop deployment
+
+### Troubleshooting
+
+1. **Build errors**: Ensure all platform requirements are installed
+2. **White screen**: Check that `cordova.js` is included in `index.html`
+3. **API issues**: Some browser APIs may behave differently in Cordova. The codebase includes `cordova-util.js` to handle platform differences
+
+For more detailed instructions and platform-specific configurations, refer to the [ccboard repository](https://github.com/cboard-org/ccboard).
 
 ## Secrets Management
 
